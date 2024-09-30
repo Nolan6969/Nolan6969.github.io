@@ -1,107 +1,59 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    background-color: #e0f7fa;
-    margin: 0;
-    padding: 20px;
 }
 
-h1 {
-    margin-bottom: 10px;
-}
-
-.container {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-}
-
-.tabuleiro {
-    margin: 0 auto;
-}
-
-.grid-container {
-    display: grid;
-    grid-template-areas: 
-        "top top"
-        "left grid";
-    grid-template-columns: auto auto;
-    gap: 5px;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(15, 30px);
-    grid-template-rows: repeat(15, 30px);
-    gap: 2px;
-    justify-content: center;
-}
-
-.labels-top {
-    display: grid;
-    grid-area: top;
-    grid-template-columns: repeat(15, 30px);
-    gap: 2px;
-}
-
-.labels-left {
-    display: grid;
-    grid-area: left;
-    grid-template-rows: repeat(15, 30px);
-    gap: 2px;
-}
-
-.label {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #ddd;
-    font-weight: bold;
-}
-
-.cell {
-    width: 30px;
-    height: 30px;
-    background-color: #a7c7e7; /* Cor da água */
-    cursor: pointer;
-    border: 1px solid #333;
-    transition: background-color 0.3s;
-}
-
-.cell.tocado {
-    background-color: #ff5252; /* Vermelho para acertos */
-}
-
-.cell.miss {
-    background-color: #ffffff; /* Branco para água */
-}
-
-#mensagem {
+h2 {
     margin-top: 20px;
-    font-size: 1.2em;
-    color: #333;
 }
 
-#contador {
-    margin-top: 10px;
-    font-size: 1em;
-    color: #333;
-}
-
-#contador span {
-    font-weight: bold;
-}
-
-#bomba-btn {
-    margin-top: 20px;
+input {
+    margin: 10px;
     padding: 10px;
-    font-size: 1em;
-    background-color: #ffeb3b;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
     border: none;
     cursor: pointer;
-    transition: background-color 0.3s;
 }
 
-#bomba-btn:hover {
+.board-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td {
+    width: 40px;
+    height: 40px;
+    border: 1px solid black;
+    cursor: pointer;
+    background-color: lightblue;
+}
+
+td.hit {
+    background-color: red;
+}
+
+td.miss {
+    background-color: white;
+}
+
+#gameInfo {
+    margin-top: 20px;
+    font-size: 20px;
+}
+
+#currentTeam {
+    font-size: 24px;
+    margin-bottom: 10px;
+}

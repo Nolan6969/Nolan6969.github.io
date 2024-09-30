@@ -1,171 +1,139 @@
-const grid = document.getElementById('grid');
-const mensagem = document.getElementById('mensagem');
-const naviosRestantesSpan = document.getElementById('navios-restantes');
-const bombaBtn = document.getElementById('bomba-btn');
+// Inicializar tabuleiros vazios com 10 barcos
+let board1 = Array(10).fill(null).map(() => Array(10).fill(0));
+let board2 = Array(10).fill(null).map(() => Array(10).fill(0));
 
-const letras = 'ABCDEFGHIJKLMNO'; // Letras para o tabuleiro
-const tamanhoTabuleiro = 15; // Tabuleiro 15x15
-const navios = [
-    { tamanho: 5, afundado: false },
-    { tamanho: 4, afundado: false },
-    { tamanho: 3, afundado: false },
-    { tamanho: 3, afundado: false },
-    { tamanho: 2, afundado: false },
-    { tamanho: 1, afundado: false }
-];
+let numBombs1 = 2;
+let numBombs2 = 2;
+let currentTeam = 1;
+let team1Name = "";
+let team2Name = "";
 
-let naviosRestantes = navios.length;
-let bombaUsada = false;
+// Função para iniciar o jogo
+document.getElementById('startGame').addEventListener('click', function () {
+    team1Name = document.getElementById('team1Name').value || "Grupo 1";
+    team2Name = document.getElementById('team2Name').value || "Grupo 2";
+    
+    document.getElementById('team1Title').textContent = team1Name;
+    document.getElementById('team2Title').textContent = team2Name;
+    document.getElementById('currentTeam').textContent = `Grupo Atual: ${team1Name}`;
+    
+    document.querySelector('.setup').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    
+    criarTabuleiros();
+    posicionarBarcos(board1);
+    posicionarBarcos(board2);
+});
 
-naviosRestantesSpan.textContent = naviosRestantes;
-
-// Função para criar o tabuleiro
-function criarTabuleiro() {
-    // Criar letras no topo
-    const labelsTop = document.querySelector('.labels-top');
-    for (let i = 0; i < tamanhoTabuleiro; i++) {
-        const label = document.createElement('div');
-        label.classList.add('label');
-        label.textContent = letras[i];
-        labelsTop.appendChild(label);
-    }
-
-    // Criar números à esquerda
-    const labelsLeft = document.querySelector('.labels-left');
-    for (let i = 1; i <= tamanhoTabuleiro; i++) {
-        const label = document.createElement('div');
-        label.classList.add('label');
-        label.textContent = i;
-        labelsLeft.appendChild(label);
-    }
-
-    // Criar células no grid
-    for (let i = 0; i < tamanhoTabuleiro * tamanhoTabuleiro; i++) {
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        cell.dataset.id = i;
-        grid.appendChild(cell);
-    }
+// Função para criar os tabuleiros
+function criarTabuleiros() {
+    const board1El = document.getElementById('board1');
+    const board2El = document.getElementById('board2');
+    criarTabuleiro(board1El, board1, 1);
+    criarTabuleiro(board2El, board2, 2);
 }
 
-// Função para posicionar navios
-function posicionarNavios() {
-    navios.forEach((navio) => {
-        let posicionado = false;
-        while (!posicionado) {
-            const horizontal = Math.random() < 0.5; // Aleatoriamente escolhe entre horizontal e vertical
-            const x = Math.floor(Math.random() * tamanhoTabuleiro);
-            const y = Math.floor(Math.random() * tamanhoTabuleiro);
-            const posicoes = [];
-
-            for (let i = 0; i < navio.tamanho; i++) {
-                const novaX = horizontal ? x + i : x;
-                const novaY = horizontal ? y : y + i;
-
-                if (novaX >= tamanhoTabuleiro || novaY >= tamanhoTabuleiro) {
-                    posicoes.length = 0; // Se for fora do tabuleiro, recomeça
-                    break;
-                }
-
-                const indice = novaY * tamanhoTabuleiro + novaX;
-                if (grid.children[indice].classList.contains('barco')) {
-                    posicoes.length = 0; // Se houver um navio, recomeça
-                    break;
-                }
-
-                posicoes.push(indice);
-            }
-
-            if (posicoes.length === navio.tamanho) {
-                posicoes.forEach((indice) => grid.children[indice].classList.add('barco'));
-                posicionado = true;
-            }
+// Função para gerar o tabuleiro em HTML
+function criarTabuleiro(elemento, board, numBoard) {
+    for (let i = 0; i < 10; i++) {
+        const row = document.createElement('tr');
+        for (let j = 0; j < 10; j++) {
+            const cell = document.createElement('td');
+            cell.addEventListener('click', function () {
+                fazerJogada(i, j, board, numBoard);
+            });
+            row.appendChild(cell);
         }
-    });
-}
-
-// Função para lidar com clique normal
-function lidarComCliqueNormal(cell) {
-    if (cell.classList.contains('barco')) {
-        cell.classList.add('tocado');
-        mensagem.textContent = 'Você acertou um navio!';
-        verificarNavioAfundado();
-    } else {
-        cell.classList.add('miss');
-        mensagem.textContent = 'Água!';
+        elemento.appendChild(row);
     }
 }
 
-// Função para verificar se o navio foi afundado
-function verificarNavioAfundado() {
-    const partes = document.querySelectorAll('.barco.tocado');
-    const totalPartes = navios.reduce((total, navio) => total + navio.tamanho, 0);
-
-    if (partes.length === totalPartes) {
-        naviosRestantes--;
-        naviosRestantesSpan.textContent = naviosRestantes;
-        mensagem.textContent = 'Você afundou um navio!';
-    }
-
-    if (naviosRestantes === 0) {
-        mensagem.textContent = 'Parabéns! Você afundou todos os navios!';
-        grid.removeEventListener('click', lidarComClique);
-    }
-}
-
-// Função para usar a bomba
-function usarBomba(cellIndex) {
-    const x = cellIndex % tamanhoTabuleiro;
-    const y = Math.floor(cellIndex / tamanhoTabuleiro);
-
-    for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-            const novaX = x + i;
-            const novaY = y + j;
-
-            if (novaX >= 0 && novaX < tamanhoTabuleiro && novaY >= 0 && novaY < tamanhoTabuleiro) {
-                const indice = novaY * tamanhoTabuleiro + novaX;
-                const cell = grid.children[indice];
-
-                if (!cell.classList.contains('tocado') && !cell.classList.contains('miss')) {
-                    lidarComCliqueNormal(cell);
-                }
-            }
+// Função para posicionar 10 barcos no tabuleiro
+function posicionarBarcos(board) {
+    let barcosPosicionados = 0;
+    while (barcosPosicionados < 10) {
+        const i = Math.floor(Math.random() * 10);
+        const j = Math.floor(Math.random() * 10);
+        if (board[i][j] === 0) {
+            board[i][j] = 1; // Posiciona o barco
+            barcosPosicionados++;
         }
     }
-
-    bombaUsada = true;
-    bombaBtn.disabled = true;
-    bombaBtn.textContent = 'Bomba Usada!';
 }
 
-// Inicializar o jogo
-criarTabuleiro();
-posicionarNavios();
+// Função para controlar o clique do jogador
+function fazerJogada(i, j, board, numBoard) {
+    const currentBombs = currentTeam === 1 ? numBombs1 : numBombs2;
+    const bombButton = document.getElementById('useBomb');
+    bombButton.style.display = currentBombs > 0 ? 'block' : 'none';
 
-// Evento de clique nas células
-grid.addEventListener('click', (e) => {
-    if (!e.target.classList.contains('cell')) return;
-
-    const cell = e.target;
-
-    // Verificar se a célula já foi clicada
-    if (cell.classList.contains('tocado') || cell.classList.contains('miss')) {
-        mensagem.textContent = 'Você já clicou nesta posição!';
+    if (board[i][j] === 2) {
+        alert("Você já jogou aqui!");
         return;
     }
 
-    lidarComCliqueNormal(cell);
-});
+    const cell = document.querySelector(`#board${numBoard} tr:nth-child(${i + 1}) td:nth-child(${j + 1})`);
+    if (board[i][j] === 1) { // Acertou um barco
+        cell.classList.add('hit');
+        cell.textContent = 'X'; // Exibe um X no acerto
+        board[i][j] = 2;
+        alert("Acertou um barco!");
+    } else { // Errou
+        cell.classList.add('miss');
+        cell.textContent = 'O'; // Exibe um O no erro
+        board[i][j] = 2;
+        alert("Errou!");
+    }
 
-// Evento para usar a bomba
-bombaBtn.addEventListener('click', () => {
-    grid.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('cell')) return;
+    trocarEquipe();
+}
 
-        const cellIndex = parseInt(e.target.dataset.id);
-        if (!bombaUsada) {
-            usarBomba(cellIndex);
+// Função para alternar entre equipes
+function trocarEquipe() {
+    currentTeam = currentTeam === 1 ? 2 : 1;
+    const currentTeamName = currentTeam === 1 ? team1Name : team2Name;
+    document.getElementById('currentTeam').textContent = `Grupo Atual: ${currentTeamName}`;
+}
+
+// Função para usar uma bomba (acerta toda a linha)
+document.getElementById('useBomb').addEventListener('click', function () {
+    const currentBombs = currentTeam === 1 ? numBombs1 : numBombs2;
+    if (currentBombs <= 0) {
+        alert("Você não tem mais bombas!");
+        return;
+    }
+
+    const linha = prompt("Digite a linha (1-10) para usar a bomba:");
+    const numLinha = parseInt(linha) - 1;
+
+    if (isNaN(numLinha) || numLinha < 0 || numLinha >= 10) {
+        alert("Linha inválida!");
+        return;
+    }
+
+    const board = currentTeam === 1 ? board2 : board1;
+    const table = currentTeam === 1 ? document.getElementById('board2') : document.getElementById('board1');
+    
+    for (let j = 0; j < 10; j++) {
+        const cell = table.querySelector(`tr:nth-child(${numLinha + 1}) td:nth-child(${j + 1})`);
+        if (board[numLinha][j] === 1) {
+            cell.classList.add('hit');
+            cell.textContent = 'X';
+            board[numLinha][j] = 2;
+        } else if (board[numLinha][j] === 0) {
+            cell.classList.add('miss');
+            cell.textContent = 'O';
+            board[numLinha][j] = 2;
         }
-    }, { once: true });
+    }
+
+    if (currentTeam === 1) {
+        numBombs1--;
+        document.getElementById('bombsTeam1').textContent = numBombs1;
+    } else {
+        numBombs2--;
+        document.getElementById('bombsTeam2').textContent = numBombs2;
+    }
+
+    trocarEquipe();
 });
